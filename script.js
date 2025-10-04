@@ -1,8 +1,10 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-const cellSize = 20;
-let snake, food, dx, dy, score, gameLoop;
+canvas.width = 600;
+canvas.height = 400;
+
+const box = 20;
 
 // Load gambar
 const bgImg = new Image();
@@ -14,90 +16,104 @@ snakeImg.src = "snake.png";
 const foodImg = new Image();
 foodImg.src = "food.png";
 
-function initGame() {
-  snake = [{ x: 100, y: 100 }];
-  dx = cellSize;
-  dy = 0;
-  score = 0;
-  placeFood();
-  if (gameLoop) clearInterval(gameLoop);
-  gameLoop = setInterval(update, 100);
-}
+// Flag kalau gambar berhasil load
+let bgReady = false;
+let snakeReady = false;
+let foodReady = false;
 
-function placeFood() {
-  food = {
-    x: Math.floor(Math.random() * (canvas.width / cellSize)) * cellSize,
-    y: Math.floor(Math.random() * (canvas.height / cellSize)) * cellSize,
-  };
-}
+bgImg.onload = () => bgReady = true;
+snakeImg.onload = () => snakeReady = true;
+foodImg.onload = () => foodReady = true;
 
-function update() {
-  const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+// Kalau gagal load, kasih fallback warna
+bgImg.onerror = () => console.warn("Background tidak ditemukan, pakai hitam");
+snakeImg.onerror = () => console.warn("Snake tidak ditemukan, pakai kotak hijau");
+foodImg.onerror = () => console.warn("Food tidak ditemukan, pakai kotak merah");
 
-  // Cek tabrakan (Game Over)
-  if (
-    head.x < 0 || head.x >= canvas.width ||
-    head.y < 0 || head.y >= canvas.height ||
-    snake.some(part => part.x === head.x && part.y === head.y)
-  ) {
-    clearInterval(gameLoop);
-    alert("Game Over! Score: " + score);
-    return;
+// Snake & food
+let snake = [{ x: 9 * box, y: 10 * box }];
+let direction;
+let food = {
+  x: Math.floor(Math.random() * 29) * box,
+  y: Math.floor(Math.random() * 19) * box
+};
+let score = 0;
+
+document.addEventListener("keydown", event => {
+  if (event.key === "ArrowUp" && direction !== "DOWN") direction = "UP";
+  else if (event.key === "ArrowDown" && direction !== "UP") direction = "DOWN";
+  else if (event.key === "ArrowLeft" && direction !== "RIGHT") direction = "LEFT";
+  else if (event.key === "ArrowRight" && direction !== "LEFT") direction = "RIGHT";
+});
+
+function draw() {
+  // Background
+  if (bgReady) {
+    ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+  } else {
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
-  snake.unshift(head);
+  // Draw snake
+  for (let i = 0; i < snake.length; i++) {
+    if (snakeReady) {
+      ctx.drawImage(snakeImg, snake[i].x, snake[i].y, box, box);
+    } else {
+      ctx.fillStyle = i === 0 ? "lime" : "green";
+      ctx.fillRect(snake[i].x, snake[i].y, box, box);
+    }
+  }
 
-  // Kalau makan makanan
-  if (head.x === food.x && head.y === food.y) {
+  // Draw food
+  if (foodReady) {
+    ctx.drawImage(foodImg, food.x, food.y, box, box);
+  } else {
+    ctx.fillStyle = "red";
+    ctx.fillRect(food.x, food.y, box, box);
+  }
+
+  // Old head
+  let snakeX = snake[0].x;
+  let snakeY = snake[0].y;
+
+  if (direction === "LEFT") snakeX -= box;
+  if (direction === "UP") snakeY -= box;
+  if (direction === "RIGHT") snakeX += box;
+  if (direction === "DOWN") snakeY += box;
+
+  // Snake makan food
+  if (snakeX === food.x && snakeY === food.y) {
     score++;
-    placeFood();
+    food = {
+      x: Math.floor(Math.random() * 29) * box,
+      y: Math.floor(Math.random() * 19) * box
+    };
   } else {
     snake.pop();
   }
 
-  draw();
-}
+  // Tambahkan kepala baru
+  let newHead = { x: snakeX, y: snakeY };
 
-function draw() {
-  // Gambar background
-  ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+  // Game over
+  if (
+    snakeX < 0 ||
+    snakeY < 0 ||
+    snakeX >= canvas.width ||
+    snakeY >= canvas.height ||
+    snake.some(seg => seg.x === newHead.x && seg.y === newHead.y)
+  ) {
+    clearInterval(game);
+    alert("Game Over! Rialo Snake Score: " + score);
+  }
 
-  // Gambar ular
-  snake.forEach(part => {
-    ctx.drawImage(snakeImg, part.x, part.y, cellSize, cellSize);
-  });
+  snake.unshift(newHead);
 
-  // Gambar makanan
-  ctx.drawImage(foodImg, food.x, food.y, cellSize, cellSize);
-
-  // Score
+  // Tulis score
   ctx.fillStyle = "white";
   ctx.font = "20px Arial";
-  ctx.fillText("Score: " + score, 10, 20);
+  ctx.fillText("Rialo Snake Score: " + score, 10, 20);
 }
 
-// Kontrol arah
-document.addEventListener("keydown", (e) => {
-  if (e.key === "ArrowUp" && dy === 0) {
-    dx = 0; dy = -cellSize;
-  } else if (e.key === "ArrowDown" && dy === 0) {
-    dx = 0; dy = cellSize;
-  } else if (e.key === "ArrowLeft" && dx === 0) {
-    dx = -cellSize; dy = 0;
-  } else if (e.key === "ArrowRight" && dx === 0) {
-    dx = cellSize; dy = 0;
-  }
-});
-
-// Tombol
-document.getElementById("restartBtn").addEventListener("click", initGame);
-document.getElementById("quitBtn").addEventListener("click", () => {
-  clearInterval(gameLoop);
-  ctx.fillStyle = "#000";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "red";
-  ctx.font = "30px Arial";
-  ctx.fillText("Thanks for playing!", 180, 200);
-});
-
-initGame();
+let game = setInterval(draw, 100);
