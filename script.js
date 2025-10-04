@@ -22,13 +22,14 @@ bgImg.onload = () => bgReady = true;
 snakeImg.onload = () => snakeReady = true;
 foodImg.onload = () => foodReady = true;
 
-// Snake & food
-let snake, direction, food, score, game;
+// State game
+let snake, direction, food, score, game, running = false;
 
 function initGame() {
   snake = [{ x: 9 * box, y: 10 * box }];
   direction = null;
   score = 0;
+  running = true;
   food = {
     x: Math.floor(Math.random() * 29) * box,
     y: Math.floor(Math.random() * 19) * box
@@ -39,6 +40,7 @@ function initGame() {
 }
 
 document.addEventListener("keydown", event => {
+  if (!running) return;
   if (event.key === "ArrowUp" && direction !== "DOWN") direction = "UP";
   else if (event.key === "ArrowDown" && direction !== "UP") direction = "DOWN";
   else if (event.key === "ArrowLeft" && direction !== "RIGHT") direction = "LEFT";
@@ -46,6 +48,8 @@ document.addEventListener("keydown", event => {
 });
 
 function draw() {
+  if (!running) return;
+
   // Background
   if (bgReady) ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
   else {
@@ -99,7 +103,9 @@ function draw() {
     snake.some(seg => seg.x === newHead.x && seg.y === newHead.y)
   ) {
     clearInterval(game);
+    running = false;
     alert("Game Over! Skor kamu: " + score);
+    return;
   }
 
   snake.unshift(newHead);
@@ -111,9 +117,14 @@ playAgainBtn.addEventListener("click", () => {
 });
 
 quitBtn.addEventListener("click", () => {
+  running = false;
   clearInterval(game);
-  alert("Terima kasih sudah main Rialo Snake!");
+  ctx.fillStyle = "black";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "red";
+  ctx.font = "30px Arial";
+  ctx.fillText("Terima kasih sudah main Rialo Snake!", 60, canvas.height / 2);
 });
-
-// Mulai pertama kali
+ 
+// Start game pertama kali
 initGame();
