@@ -5,29 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Rialo Snake</title>
   <link rel="stylesheet" href="style.css" />
-  <style>
-    /* fallback style biar game langsung center kalau style.css belum ke-load */
-    body {
-      margin: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background-color: #a9ddd3;
-      font-family: "Poppins", sans-serif;
-    }
-    canvas {
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-      border: 2px solid #e8e3d5;
-      background: #fff;
-    }
-  </style>
 </head>
 <body>
-  <canvas id="game" width="600" height="400"></canvas>
-
-  <!-- Pastikan file script.js kamu ada di folder yang sama -->
+  <div class="container">
+    <h1>🐍 Rialo Snake</h1>
+    <div id="scoreBoard">Score: 0</div>
+    <canvas id="gameCanvas"></canvas>
+    <div class="buttons">
+      <button id="playAgain">Play Again</button>
+      <button id="quit">Quit</button>
+    </div>
+  </div>
   <script src="script.js"></script>
 </body>
 </html>
